@@ -12,11 +12,15 @@ from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import slugify
 
+import mptt
+
 from feincms import settings
 from feincms.models import Base
 
 from feincms.translations import TranslatedObjectMixin, Translation, \
     TranslatedObjectManager
+
+from feincms.admin import editor
 
 import re
 import os
@@ -36,21 +40,23 @@ class Category(models.Model):
 
     title = models.CharField(_('title'), max_length=200)
     parent = models.ForeignKey('self', blank=True, null=True,
-        related_name='children', limit_choices_to={'parent__isnull': True},
+        related_name='children',
         verbose_name=_('parent'))
 
     slug = models.SlugField(_('slug'), max_length=150)
 
     class Meta:
-        ordering = ['parent__title', 'title']
+        ordering = ['lft', 'parent__title', 'title']
         verbose_name = _('category')
         verbose_name_plural = _('categories')
 
     def __unicode__(self):
         if self.parent_id:
-            return u'%s - %s' % (self.parent.title, self.title)
-
+            if self.parent.parent_id:
+                return u'%s/%s/%s' % (self.parent.parent.title, self.parent.title, self.title)
+            return u'%s/%s' % (self.parent.title, self.title)
         return self.title
+
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -58,13 +64,21 @@ class Category(models.Model):
 
         super(Category, self).save(*args, **kwargs)
 
+mptt.register(Category)
 
-class CategoryAdmin(admin.ModelAdmin):
-    list_display      = ['parent', 'title']
+class CategoryAdmin(editor.TreeEditor):
+    list_display      = ['title']
     list_filter       = ['parent']
-    list_per_page     = 25
+    list_per_page     = 100
     search_fields     = ['title']
     prepopulated_fields = { 'slug': ('title',), }
+    
+        
+    def _actions_column(self, page):
+        actions = super(CategoryAdmin, self)._actions_column(page)
+        actions.insert(0, u'<a href="add/?parent=%s" title="%s"><img src="%simg/admin/icon_addlink.gif" alt="%s"></a>' % (
+            page.pk, _('Add child category'), django_settings.ADMIN_MEDIA_PREFIX ,_('Add child category')))
+        return actions
 
 
 # ------------------------------------------------------------------------
@@ -74,7 +88,7 @@ class MediaFileBase(Base, TranslatedObjectMixin):
     from django.core.files.storage import FileSystemStorage
     fs = FileSystemStorage(location=settings.FEINCMS_MEDIALIBRARY_ROOT,
                            base_url=settings.FEINCMS_MEDIALIBRARY_URL)
-
+    title = models.CharField('Title', max_length=255)
     file = models.FileField(_('file'), max_length=255, upload_to=settings.FEINCMS_MEDIALIBRARY_UPLOAD_TO, storage=fs)
     type = models.CharField(_('file type'), max_length=12, editable=False, choices=())
     created = models.DateTimeField(_('created'), editable=False, default=datetime.now)
@@ -139,8 +153,10 @@ class MediaFileBase(Base, TranslatedObjectMixin):
 
         if trans:
             return trans
+        elif self.title:
+            return '%s' % (self.title)
         else:
-            return os.path.basename(self.file.name)
+            return '<%s>' % os.path.basename(self.file.name)
 
     def get_absolute_url(self):
         return self.file.url
