@@ -22,6 +22,8 @@ from feincms.translations import TranslatedObjectMixin, Translation, \
 
 from feincms.admin import editor
 
+from sorl.thumbnail.main import DjangoThumbnail
+
 import re
 import os
 import logging
@@ -165,6 +167,13 @@ class MediaFileBase(Base, TranslatedObjectMixin):
         return self.filetypes_dict[self.type]
     file_type.admin_order_field = 'type'
     file_type.short_description = _('file type')
+    
+    def thumbnail(self):
+        thumb = DjangoThumbnail(self.file, (75,75))
+        thumb.generate()
+        return '<img src="%s" width="%s" height="%s"/>' % (thumb.absolute_url, thumb.width(), thumb.height())
+    thumbnail.short_description = 'Thumbnail'
+    thumbnail.allow_tags = True
 
     def file_info(self):
         """
@@ -259,10 +268,10 @@ class MediaFileTranslationInline(admin.StackedInline):
 class MediaFileAdmin(admin.ModelAdmin):
     date_hierarchy    = 'created'
     inlines           = [MediaFileTranslationInline]
-    list_display      = ['__unicode__', 'file_type', 'copyright', 'file_info', 'formatted_file_size', 'created']
+    list_display      = ['thumbnail', '__unicode__', 'file_type', 'file_info', 'formatted_file_size', 'created']
     list_filter       = ['type', 'categories']
     list_per_page     = 25
-    search_fields     = ['copyright', 'file', 'translations__caption']
+    search_fields     = ['title', 'copyright', 'file', 'translations__caption']
     filter_horizontal = ("categories",)
 
     def queryset(self, request):
