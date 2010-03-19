@@ -21,7 +21,7 @@ except NameError:
 
 def handler(request, path=None):
     if path is None:
-        path = request.path
+        path = request.META['QUERY_STRING']
 
     # prepare storage for rendered application contents
     if not hasattr(request, '_feincms_applicationcontents'):
