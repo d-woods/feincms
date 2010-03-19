@@ -28,6 +28,8 @@ import re
 import os
 import logging
 
+from os.path import basename
+
 class CategoryManager(models.Manager):
     """
     Simple manager which exists only to supply ``.select_related("parent")``
@@ -187,7 +189,7 @@ class MediaFileBase(Base, TranslatedObjectMixin):
             thumb.generate()
             return '<img src="%s" width="%s" height="%s"/>' % (thumb.absolute_url, thumb.width(), thumb.height())
         else:
-            return '<a href="%s">%s</a>' % (self.get_absolute_url(), self.title)
+            return '<a href="%s">%s</a>' % (self.get_absolute_url(), basename(self.file.name))
     preview.short_description = 'Preview'
     preview.allow_tags = True
 
@@ -199,7 +201,6 @@ class MediaFileBase(Base, TranslatedObjectMixin):
         the file name later on, this can be used to access the file name from
         JS, like for example a TinyMCE connector shim.
         """
-        from os.path import basename
         return u'<input type="hidden" class="medialibrary_file_path" name="_media_path_%d" value="%s" /> %s' % (
                 self.id,
                 self.file.name,
