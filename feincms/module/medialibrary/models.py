@@ -168,12 +168,28 @@ class MediaFileBase(Base, TranslatedObjectMixin):
     file_type.admin_order_field = 'type'
     file_type.short_description = _('file type')
     
-    def thumbnail(self):
-        thumb = DjangoThumbnail(self.file, (75,75))
-        thumb.generate()
-        return '<img src="%s" width="%s" height="%s"/>' % (thumb.absolute_url, thumb.width(), thumb.height())
-    thumbnail.short_description = 'Thumbnail'
-    thumbnail.allow_tags = True
+    def preview(self):
+        """
+        ('image', _('Image'), lambda f: re.compile(r'\.(bmp|jpe?g|jp2|jxr|gif|png|tiff?)$', re.IGNORECASE).search(f)),
+        ('video', _('Video'), lambda f: re.compile(r'\.(mov|m[14]v|mp4|avi|mpe?g|qt|ogv|wmv)$', re.IGNORECASE).search(f)),
+        ('audio', _('Audio'), lambda f: re.compile(r'\.(au|mp3|m4a|wma|oga|ram|wav)$', re.IGNORECASE).search(f)),
+        ('pdf', _('PDF document'), lambda f: f.lower().endswith('.pdf')),
+        ('swf', _('Flash'), lambda f: f.lower().endswith('.swf')),
+        ('txt', _('Text'), lambda f: f.lower().endswith('.txt')),
+        ('rtf', _('Rich Text'), lambda f: f.lower().endswith('.rtf')),
+        ('doc', _('Microsoft Word'), lambda f: re.compile(r'\.docx?$', re.IGNORECASE).search(f)),
+        ('xls', _('Microsoft Excel'), lambda f: re.compile(r'\.xlsx?$', re.IGNORECASE).search(f)),
+        ('ppt', _('Microsoft PowerPoint'), lambda f: re.compile(r'\.pptx?$', re.IGNORECASE).search(f)),
+        ('other', _('Binary'), lambda f: True), # Must be last
+        """
+        if self.file_type == 'image':
+            thumb = DjangoThumbnail(self.file, (75,75))
+            thumb.generate()
+            return '<img src="%s" width="%s" height="%s"/>' % (thumb.absolute_url, thumb.width(), thumb.height())
+        else:
+            return '<a href="%s">%s</a>' % (self.get_absolute_url(), self.title)
+    preview.short_description = 'Preview'
+    preview.allow_tags = True
 
     def file_info(self):
         """
@@ -268,7 +284,7 @@ class MediaFileTranslationInline(admin.StackedInline):
 class MediaFileAdmin(admin.ModelAdmin):
     date_hierarchy    = 'created'
     inlines           = [MediaFileTranslationInline]
-    list_display      = ['thumbnail', '__unicode__', 'file_type', 'file_info', 'formatted_file_size', 'created']
+    list_display      = ['preview', '__unicode__', 'file_type', 'file_info', 'formatted_file_size', 'created']
     list_filter       = ['type', 'categories']
     list_per_page     = 25
     search_fields     = ['title', 'copyright', 'file', 'translations__caption']
