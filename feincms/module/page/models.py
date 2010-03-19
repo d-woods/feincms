@@ -286,8 +286,11 @@ class Page(Base):
             cached_page_urls[page.id] = page._cached_url
             super(Page, page).save() # do not recurse
 
+    @models.permalink
     def get_absolute_url(self):
-        return self._cached_url
+	return ('feincms.views.applicationcontent.handler', [self._cached_url[1:-1]])
+        #return self._cached_url
+
 
     def get_preview_url(self):
         try:
