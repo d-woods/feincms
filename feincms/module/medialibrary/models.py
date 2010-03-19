@@ -182,7 +182,7 @@ class MediaFileBase(Base, TranslatedObjectMixin):
         ('ppt', _('Microsoft PowerPoint'), lambda f: re.compile(r'\.pptx?$', re.IGNORECASE).search(f)),
         ('other', _('Binary'), lambda f: True), # Must be last
         """
-        if self.file_type == 'image':
+        if self.type == 'image':
             thumb = DjangoThumbnail(self.file, (75,75))
             thumb.generate()
             return '<img src="%s" width="%s" height="%s"/>' % (thumb.absolute_url, thumb.width(), thumb.height())
