@@ -585,6 +585,7 @@ class PageAdminForm(forms.ModelForm):
 
         return cleaned_data
 
+
 # ------------------------------------------------------------------------
 if settings.FEINCMS_PAGE_USE_SPLIT_PANE_EDITOR:
     list_modeladmin = editor.SplitPaneEditor
@@ -679,6 +680,29 @@ class PageAdmin(editor.ItemEditor, list_modeladmin):
             self.message_user(request, ugettext("You have replaced %s. You may continue editing the now-active page below.") % page)
             return HttpResponseRedirect('.')
 
+        # Hack around a Django bug: raw_id_fields aren't validated correctly for
+        # ForeignKeys in 1.1: http://code.djangoproject.com/ticket/8746 details
+        # the problem - it was fixed for MultipleChoiceFields but not ModelChoiceField
+        # See http://code.djangoproject.com/ticket/9209
+
+        if hasattr(self, "raw_id_fields"):
+            for k in self.raw_id_fields:
+                if not k in request.POST:
+                    continue
+                if not isinstance(getattr(Page, k).field, models.ForeignKey):
+                    continue
+
+                v = request.POST[k]
+
+                if not v:
+                    del request.POST[k]
+                    continue
+
+                try:
+                    request.POST[k] = int(v)
+                except ValueError:
+                    request.POST[k] = None
+
         return super(PageAdmin, self).change_view(request, object_id, extra_context)
 
     def render_item_editor(self, request, object, context):
@@ -698,7 +722,6 @@ class PageAdmin(editor.ItemEditor, list_modeladmin):
         if not hasattr(self, "_visible_pages"):
             self._visible_pages = list() # Sanity check in case this is not already defined
 
-        # TODO: Couldn't this simply check page.get_ancestors(visible=False).count()?
         if page.parent_id and not page.parent_id in self._visible_pages:
             # parent page's invisibility is inherited
             if page.id in self._visible_pages:
