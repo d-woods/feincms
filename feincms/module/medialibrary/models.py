@@ -26,7 +26,7 @@ from sorl.thumbnail.main import DjangoThumbnail
 
 import re
 import os
-import logging
+from feincms.logging import logger
 
 class CategoryManager(models.Manager):
     """
@@ -220,7 +220,7 @@ class MediaFileBase(Base, TranslatedObjectMixin):
             try:
                 self.file_size = self.file.size
             except (OSError, IOError, ValueError), e:
-                logging.error("Unable to read file size for %s: %s", self, e)
+                logger.error("Unable to read file size for %s: %s", self, e)
 
         super(MediaFileBase, self).save(*args, **kwargs)
 
