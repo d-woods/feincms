@@ -75,7 +75,10 @@ function poorify_rich(item){
             }
         });
     });
+
+    $('input[type=radio][checked]', item).addClass('radiochecked');
 }
+
 function richify_poor(item){
     item.children(".item-content").show();
 
@@ -92,6 +95,8 @@ function richify_poor(item){
             }
         });
     });
+
+    $('input.radiochecked', item).removeClass('radiochecked').trigger('click');
 }
 
 function sort_by_ordering(e1, e2) {
@@ -208,9 +213,9 @@ $(document).ready(function(){
         return false;
     });
 
-    current_template = $('input[name=template_key][checked]').val();
+    current_template = $('input[name=template_key][checked], select[name=template_key]').val();
 
-    $('input[name=template_key]').click(function(){
+    function on_template_key_changed(){
         var input_element = this;
         var new_template = this.value;
 
@@ -254,7 +259,10 @@ $(document).ready(function(){
         });
 
         return false;
-    });
+    }
+
+    $('input[type=radio][name=template_key]').click(on_template_key_changed);
+    $('select[name=template_key]').change(on_template_key_changed);
 
     $("fieldset.order-item").live('click', function(){
         if(!$(this).hasClass('active-item')) {
