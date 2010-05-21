@@ -100,9 +100,12 @@ class RichTextContent(models.Model):
         super(RichTextContent, self).save(*args, **kwargs)
 
     @classmethod
-    def initialize_type(cls, cleanse=False):
+    def initialize_type(cls, cleanse=False, tinymce_config=None): 
         cls.cleanse = cleanse
-
+        
+        if tinymce_config is not None:
+            cls.feincms_item_editor_includes['head'] = [tinymce_config]
+            
         # TODO: Move this into somewhere more generic:
         if settings.FEINCMS_TIDY_HTML:
             # Make sure we can load the tidy function without dependency failures:
