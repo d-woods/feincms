@@ -1,7 +1,9 @@
 {% extends "admin/change_form.html" %}
-{% load feincms_compat_tags i18n admin_modify adminmedia %}
+
+{% load feincms_compat_tags i18n admin_modify adminmedia  grp_tags %}
 
 {% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+
 {% block coltype %}{% if ordered_objects %}colMS{% else %}colM{% endif %}{% endblock %}
 
 {% block extrahead %}{{ block.super }}
@@ -12,7 +14,7 @@
 {% else %}
 <script type="text/javascript" src="{{ FEINCMS_ADMIN_MEDIA }}jquery-1.3.2.min.js"></script>
 <script type="text/javascript" src="{{ FEINCMS_ADMIN_MEDIA }}ui/jqueryui-custom-1.7.2.min.js"></script>
-<link rel="stylesheet" type="text/css" href="{{ FEINCMS_ADMIN_MEDIA }}ui/jqueryui-custom-1.7.2.css" />
+    <link rel="stylesheet" type="text/css" href="{{ FEINCMS_ADMIN_MEDIA }}ui/jqueryui-custom-1.7.2.css" /> 
 {% endif %}
 
 <link rel="stylesheet" type="text/css" href="{{ FEINCMS_ADMIN_MEDIA }}style.css" />
@@ -43,14 +45,16 @@
 </script>
 {% endblock %}
 
+{% comment %}
 {% block breadcrumbs %}
-<div class="breadcrumbs">
+<!--<div class="breadcrumbs">
      <a href="../../../">{% trans "Home" %}</a> &rsaquo;
      <a href="../../">{{ opts.app_label|capfirst|escape }}</a> &rsaquo;
      <a href="../">{{ opts.verbose_name_plural|capfirst }}</a> &rsaquo;
      {{ object }}
 </div>
 {% endblock %}
+{% endcomment %}
 
 {% block content %}
 
@@ -58,6 +62,7 @@
 
 {% block object-tools %}
 {{ block.super }}
+{% comment %}
 <ul class="object-tools">
     {% if object.get_preview_url %}
         <li><a target="_blank" href="{{ object.get_preview_url }}" class="viewsitelink">{% trans "Preview" %}</a></li>
@@ -66,6 +71,7 @@
         <li><a href="../add/?parent={{ object.pk }}" class="addchild">{% trans "Add child page" %}</a></li>
     {% endif %}
 </ul>
+{% endcomment %}
 {% endblock %}
 
 <form name="main_form" enctype="multipart/form-data" action="." method="post" id="{{ opts.module_name }}_form">
@@ -73,6 +79,7 @@
 {% block form_top %}{% endblock %}
 <div>
 
+    {% comment %}
 <div class="submit-row" >
 <input type="submit" value="{% trans "Save" %}" class="default save-button" name="_save" />
 <p class="deletelink-box"><a href="delete/" class="deletelink">{% trans "Delete" %}</a></p>
@@ -80,6 +87,7 @@
 <input type="submit" value="{% trans "Save and add another" %}" class="save-add-button" name="_addanother"  />
 <input type="submit" value="{% trans "Save and continue editing" %}" class="save-continue-button" name="_continue" />
 </div>
+{% endcomment %}
 
 {% if errors %}
     <p class="errornote">
@@ -172,7 +180,11 @@
 
 {% block after_related_objects %}{% endblock %}
 
+<!-- Submit-Row -->
+{% submit_row %}
 
+
+{% comment %}
 <div class="submit-row" >
 <input type="submit" value="{% trans "Save" %}" class="default" name="_save" />
 <p class="deletelink-box"><a href="delete/" class="deletelink">{% trans "Delete" %}</a></p>
@@ -180,6 +192,7 @@
 <input type="submit" value="{% trans "Save and add another" %}" name="_addanother"  />
 <input type="submit" value="{% trans "Save and continue editing" %}" name="_continue" />
 </div>
+{% endcomment %}
 
 <div id="inlines">
 {% for formset in inline_formsets %}
@@ -205,6 +218,9 @@
     </div>
 {% endfor %}
 </div>
+    
+    <!-- JS for prepopulated fields -->
+    {% prepopulated_fields_js %}
 
 </div>
 </form>
